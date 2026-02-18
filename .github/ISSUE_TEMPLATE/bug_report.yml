@@ -1,0 +1,54 @@
+name: Bug Report
+description: Report a bug with Harbor Exempt
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: How can we reproduce this issue?
+      placeholder: |
+        1. Navigate to ...
+        2. Click on ...
+        3. Observe error: ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What actually happened? Include error messages or logs if applicable.
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Which version of Harbor Exempt are you running?
+      placeholder: "e.g. latest, v1.0.0, dev"
+    validations:
+      required: true
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment method
+      options:
+        - Helm chart (Kubernetes)
+        - Docker (docker-compose)
+        - Local Python (uvicorn)
+    validations:
+      required: true
