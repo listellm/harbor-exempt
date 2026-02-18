@@ -1,1 +1,2 @@
-# https://aquasecurity.github.io/trivy/v0.47/docs/configuration/filtering/#trivyignore
+# No upstream fix available — Debian 13 glibc memalign integer overflow
+CVE-2026-0861

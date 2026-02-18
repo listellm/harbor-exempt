@@ -10,9 +10,21 @@ import time
 
 from fastapi import APIRouter, HTTPException
 
-from app.db import acquire, upsert_project, create_scan, upsert_vulnerability, mark_fixed, reconcile_accepted_cves_for_project
-from app.harbor import HarborClient, extract_repository, extract_tag
-from app.metrics import AUTO_RECONCILE_TOTAL, SCANS_TOTAL, SCAN_PROCESSING_DURATION, VULNS_INGESTED_TOTAL
+from app.db import (
+    acquire,
+    create_scan,
+    mark_fixed,
+    reconcile_accepted_cves_for_project,
+    upsert_project,
+    upsert_vulnerability,
+)
+from app.harbor import extract_repository, extract_tag
+from app.metrics import (
+    AUTO_RECONCILE_TOTAL,
+    SCAN_PROCESSING_DURATION,
+    SCANS_TOTAL,
+    VULNS_INGESTED_TOTAL,
+)
 from app.models import HarborWebhookPayload
 
 logger = logging.getLogger(__name__)

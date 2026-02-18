@@ -1,7 +1,5 @@
 """Unit tests for _extract_fixed_versions in app.osv."""
 
-import pytest
-
 from app.osv import _extract_fixed_versions
 
 

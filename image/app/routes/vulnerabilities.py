@@ -15,7 +15,6 @@ from app.db import (
     list_vulnerabilities,
 )
 from app.metrics import ACCEPTANCES_CREATED_TOTAL, ACCEPTANCES_REVOKED_TOTAL
-from app.scheduler import request_sync
 from app.models import (
     AcceptRequest,
     AcceptResponse,
@@ -26,6 +25,7 @@ from app.models import (
     VulnerabilityListResponse,
     VulnerabilityResponse,
 )
+from app.scheduler import request_sync
 
 logger = logging.getLogger(__name__)
 

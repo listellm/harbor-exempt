@@ -1,7 +1,5 @@
 """Unit tests for _map_harbor_vulnerability in app.webhook."""
 
-import pytest
-
 from app.webhook import _map_harbor_vulnerability
 
 FULL_VULN = {

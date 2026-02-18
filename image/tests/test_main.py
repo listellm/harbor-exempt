@@ -2,7 +2,6 @@
 
 from datetime import datetime, timezone
 
-import pytest
 from freezegun import freeze_time
 
 from app.main import expiry_age_class, format_datetime, scan_age_class

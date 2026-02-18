@@ -20,7 +20,11 @@ from app.db import (
     update_scan_tags,
     upsert_fix_check,
 )
-from app.metrics import ACCEPTANCES_EXPIRED_TOTAL, HARBOR_SYNC_PROJECTS_TOTAL, OSV_CHECK_LAST_SUCCESS
+from app.metrics import (
+    ACCEPTANCES_EXPIRED_TOTAL,
+    HARBOR_SYNC_PROJECTS_TOTAL,
+    OSV_CHECK_LAST_SUCCESS,
+)
 from app.webhook import _map_harbor_vulnerability
 
 logger = logging.getLogger(__name__)
