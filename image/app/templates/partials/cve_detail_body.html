@@ -1,0 +1,112 @@
+{% if acceptances_created is defined and acceptances_created > 0 %}
+<div class="alert alert-success">
+    Accepted <span class="mono">{{ cve_id }}</span> across {{ acceptances_created }} instance{{ 's' if acceptances_created != 1 else '' }}.
+</div>
+{% endif %}
+
+<div class="card mb-2" style="padding: 1rem 1.25rem;">
+    <div style="display: flex; gap: 2rem; align-items: center; flex-wrap: wrap;">
+        <div>
+            <span style="font-size: 1.5rem; font-weight: 600;">{{ total_instances }}</span>
+            <span class="text-secondary" style="font-size: 0.875rem;"> instance{{ 's' if total_instances != 1 else '' }} across </span>
+            <span style="font-size: 1.5rem; font-weight: 600;">{{ project_names|length if project_names is defined else instances|map(attribute='project_name')|unique|list|length }}</span>
+            <span class="text-secondary" style="font-size: 0.875rem;"> project{{ 's' if (project_names|length if project_names is defined else instances|map(attribute='project_name')|unique|list|length) != 1 else '' }}</span>
+        </div>
+        <div style="display: flex; gap: 1rem;">
+            {% if open_count > 0 %}
+            <span class="status-badge status-open">{{ open_count }} open</span>
+            {% endif %}
+            {% if accepted_count > 0 %}
+            <span class="status-badge status-accepted">{{ accepted_count }} accepted</span>
+            {% endif %}
+            {% if fixed_count > 0 %}
+            <span class="status-badge status-fixed">{{ fixed_count }} fixed</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% if is_admin and open_count > 0 %}
+<div class="card mb-2" id="bulk-accept-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="font-size: 1rem; margin: 0;">Accept Open Instances</h3>
+    </div>
+    <form hx-post="/ui/bulk-accept-cve"
+          hx-target="#cve-detail-body"
+          hx-swap="innerHTML">
+        <input type="hidden" name="cve_id" value="{{ cve_id }}">
+        {% set op = open_projects if open_projects is defined else [] %}
+        {% if op|length > 1 %}
+        <div class="form-group" style="margin-bottom: 0.75rem;">
+            <label style="margin-bottom: 0.25rem;">Projects
+                <span class="text-secondary" style="font-weight: 400; font-size: 0.8rem; margin-left: 0.5rem;">
+                    <a href="#" id="toggle-all-projects" style="text-decoration: none;">Select all</a>
+                    /
+                    <a href="#" id="toggle-none-projects" style="text-decoration: none;">None</a>
+                </span>
+            </label>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.25rem 1rem;">
+                {% for proj in op %}
+                <label style="display: flex; align-items: center; gap: 0.35rem; font-weight: 400; cursor: pointer;">
+                    <input type="checkbox" name="projects" value="{{ proj }}" checked class="project-checkbox">
+                    {{ proj }}
+                </label>
+                {% endfor %}
+            </div>
+        </div>
+        {% elif op|length == 1 %}
+        <input type="hidden" name="projects" value="{{ op[0] }}">
+        {% endif %}
+        <div style="display: flex; gap: 0.75rem; align-items: flex-end; flex-wrap: wrap;">
+            <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                <label for="justification">Justification</label>
+                <textarea name="justification" id="justification" class="form-control"
+                          rows="2" required placeholder="Why is this risk acceptable?"></textarea>
+            </div>
+            <div class="form-group" style="flex: 1; min-width: 160px; margin-bottom: 0;">
+                <label for="expires_at">Expires</label>
+                <input type="text" name="expires_at" id="expires_at" class="form-control flatpickr-date"
+                       required placeholder="Select date">
+            </div>
+            <button type="submit" class="btn btn-primary">
+                Accept Selected ({{ open_count }})
+                <span class="htmx-indicator spinner"></span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Affected Instances</h3>
+    {% include "partials/cve_instance_table.html" %}
+</div>
+
+<script>
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        defaultDate: new Date().fp_incr(1),
+        minDate: 'today',
+        maxDate: new Date().fp_incr({{ max_expiry_days }}),
+        theme: 'dark'
+    });
+
+    (function () {
+        var allBtn = document.getElementById('toggle-all-projects');
+        var noneBtn = document.getElementById('toggle-none-projects');
+        if (allBtn) {
+            allBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.project-checkbox').forEach(function (cb) { cb.checked = true; });
+            });
+        }
+        if (noneBtn) {
+            noneBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelectorAll('.project-checkbox').forEach(function (cb) { cb.checked = false; });
+            });
+        }
+    })();
+</script>

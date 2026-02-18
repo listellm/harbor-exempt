@@ -1,0 +1,18 @@
+{{- if .Values.database.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "harbor-exempt.fullname" . }}-postgresql
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "harbor-exempt.postgresql.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5432
+      targetPort: postgresql
+      protocol: TCP
+      name: postgresql
+  selector:
+    {{- include "harbor-exempt.postgresql.selectorLabels" . | nindent 4 }}
+{{- end }}

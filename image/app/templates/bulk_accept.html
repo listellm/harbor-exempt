@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Bulk Accept{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Bulk Accept</h1>
+    <p>Accept a CVE across multiple projects at once</p>
+</div>
+
+<div class="card">
+    <form hx-post="/ui/bulk-accept"
+          hx-target="#bulk-result"
+          hx-swap="innerHTML">
+        <div class="form-group">
+            <label for="cve_id">CVE ID</label>
+            <input type="text" name="cve_id" id="cve_id" class="form-control mono"
+                   required placeholder="CVE-2024-XXXXX" style="max-width: 300px;">
+        </div>
+
+        <div class="form-group">
+            <label for="projects">Projects (leave empty for all)</label>
+            <select name="projects" id="projects" class="form-control" multiple
+                    style="max-width: 400px; min-height: 120px;">
+                {% for project in all_projects %}
+                <option value="{{ project }}">{{ project }}</option>
+                {% endfor %}
+            </select>
+            <span class="text-muted" style="font-size: 0.75rem; display: block; margin-top: 0.25rem;">
+                Hold Ctrl/Cmd to select multiple. Leave empty to accept across all projects.
+            </span>
+        </div>
+
+        <div class="form-group">
+            <label for="justification">Justification</label>
+            <textarea name="justification" id="justification" class="form-control"
+                      rows="3" required placeholder="Why is this risk acceptable across these projects?"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="expires_at">Expires</label>
+            <input type="text" name="expires_at" id="expires_at" class="form-control flatpickr-date"
+                   required placeholder="Select date" style="max-width: 200px;">
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Bulk Accept
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div id="bulk-result" class="mt-2"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        defaultDate: new Date().fp_incr(1),
+        minDate: 'today',
+        maxDate: new Date().fp_incr({{ max_expiry_days }}),
+        theme: 'dark'
+    });
+</script>
+{% endblock %}

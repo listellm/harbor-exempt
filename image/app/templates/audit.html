@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Log{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Audit Log</h1>
+    <p>Acceptance and revocation history</p>
+</div>
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/audit"
+          hx-target="#audit-table-body"
+          hx-swap="innerHTML">
+        <div class="form-group">
+            <label for="project">Project</label>
+            <select name="project" id="project" class="form-control" style="width: 180px;">
+                <option value="">All projects</option>
+                {% for p in all_projects %}
+                <option value="{{ p }}" {% if project == p %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="user">User</label>
+            <input type="text" name="user" id="user" class="form-control"
+                   value="{{ user_filter or '' }}" placeholder="Filter by user" style="width: 180px;">
+        </div>
+        <div class="form-group">
+            <label for="from_date">From</label>
+            <input type="text" name="from_date" id="from_date" class="form-control flatpickr-date"
+                   value="{{ from_date or '' }}" placeholder="Start date" style="width: 140px;">
+        </div>
+        <div class="form-group">
+            <label for="to_date">To</label>
+            <input type="text" name="to_date" id="to_date" class="form-control flatpickr-date"
+                   value="{{ to_date or '' }}" placeholder="End date" style="width: 140px;">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Apply
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Timestamp</th>
+                    <th>Action</th>
+                    <th>User</th>
+                    <th>CVE</th>
+                    <th>Project</th>
+                    <th>Severity</th>
+                    <th>Justification</th>
+                </tr>
+            </thead>
+            <tbody id="audit-table-body">
+                {% include "partials/audit_row.html" %}
+                {% if not events %}
+                <tr>
+                    <td colspan="7" class="empty-state" style="padding: 2rem;">
+                        No audit events match the current filters.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total > 0 %}
+    <div class="pagination">
+        <span class="pagination-info">
+            Showing {{ ((page - 1) * per_page) + 1 }}–{{ [page * per_page, total]|min }} of {{ total }}
+        </span>
+        <div class="pagination-buttons">
+            {% if page > 1 %}
+            <button class="btn btn-sm"
+                    hx-get="/partials/audit?page={{ page - 1 }}&per_page={{ per_page }}{% if project %}&project={{ project }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}"
+                    hx-target="#audit-table-body"
+                    hx-swap="innerHTML">Previous</button>
+            {% endif %}
+            {% if page * per_page < total %}
+            <button class="btn btn-sm"
+                    hx-get="/partials/audit?page={{ page + 1 }}&per_page={{ per_page }}{% if project %}&project={{ project }}{% endif %}{% if user_filter %}&user={{ user_filter }}{% endif %}{% if from_date %}&from_date={{ from_date }}{% endif %}{% if to_date %}&to_date={{ to_date }}{% endif %}"
+                    hx-target="#audit-table-body"
+                    hx-swap="innerHTML">Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        theme: 'dark'
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,169 @@
+---
+# Container Image
+image:
+  registry: "ghcr.io"
+  repository: harbor-exempt/harbor-exempt
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Revision History
+revisionHistoryLimit: 2
+
+# Replica Configuration
+replicas: 1
+
+pdb:
+  minAvailable: 1
+
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 50%
+    maxSurge: 50%
+
+# Naming Overrides
+nameOverride: ""
+fullnameOverride: ""
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# Database Configuration
+# When database.postgresql.enabled=true (local dev), an in-cluster StatefulSet is deployed.
+# When database.postgresql.enabled=false (production), host/port/sslmode target an external database.
+database:
+  host: ""
+  port: "5432"
+  name: "harbor_exempt"
+  sslmode: ""
+  createDatabase:
+    enabled: false
+    image: postgres:18
+    resources: {}
+  postgresql:
+    enabled: false
+    image:
+      registry: "docker.io"
+      repository: library/postgres
+      tag: "18"
+      pullPolicy: IfNotPresent
+    storage:
+      size: 5Gi
+      storageClass: ""
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+      limits:
+        cpu: 100m
+        memory: 256Mi
+    credentials:
+      username: harbor_exempt
+      password: harbor-exempt-local-password  # pragma: allowlist secret
+
+# Harbor Integration
+harbor:
+  url: "http://harbor-core.harbor.svc.cluster.local:80"
+  username: "admin"
+
+# Harbor Exempt Configuration
+harborExempt:
+  maxExpiryDays: 90
+  logLevel: "INFO"
+  schedulerEnabled: true
+  syncIntervalSeconds: 300
+  expireIntervalSeconds: 3600
+  excludedProjects: ""
+  fixCheckIntervalSeconds: 86400
+  fixCheckCacheTtlSeconds: 86400
+
+# OSV.dev fix availability checks
+osv:
+  enabled: true
+
+# Liquibase — init container that runs database migrations before Harbor Exempt starts
+liquibase:
+  enabled: true
+  image: liquibase/liquibase:4
+  command: liquibase
+  resources: {}
+
+# Secrets — sensitive values injected into the application Secret.
+# Populate via --set, values file, or leave empty and manage the Secret externally.
+secrets:
+  dbUsername: ""
+  dbPassword: ""
+  harborPassword: ""
+
+# Service Configuration
+service:
+  type: ClusterIP
+  port: 8000
+
+# Pod Configuration
+podAnnotations:
+  loki.alloy.grafana.com/logs.enabled: "true"
+
+podLabels: {}
+
+podSecurityContext:
+  enabled: true
+  runAsGroup: 65532
+  runAsUser: 65532
+  fsGroup: 65532
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  privileged: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+# Resource Limits
+resources: {}
+
+# Health Probes
+probes:
+  startup:
+    path: /healthz
+    periodSeconds: 5
+    failureThreshold: 30
+    timeoutSeconds: 5
+  liveness:
+    path: /healthz
+    initialDelaySeconds: 10
+    periodSeconds: 30
+    timeoutSeconds: 5
+  readiness:
+    path: /readyz
+    initialDelaySeconds: 5
+    periodSeconds: 10
+    timeoutSeconds: 5
+
+# Scheduling Constraints
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+# Service Monitor
+serviceMonitor:
+  enabled: false
+  interval: "30s"
+  labels: {}
+  additionalLabels: {}
+
+# Migration — one-time seed of CVE acceptances from existing Harbor allowlists.
+# Enable for first production deployment, disable after migration verified.
+migration:
+  seed:
+    enabled: false
+    data: []

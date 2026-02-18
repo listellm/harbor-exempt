@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Projects</h1>
+    <p>Vulnerability summary across all projects</p>
+</div>
+
+{% if projects %}
+<div class="card-grid">
+    {% for project in projects %}
+    {% if project.severity_threshold %}
+        {% set threshold = project.severity_threshold|lower %}
+        {% if threshold == "critical" %}
+            {% set severity_params = "CRITICAL" %}
+        {% elif threshold == "high" %}
+            {% set severity_params = "CRITICAL,HIGH" %}
+        {% elif threshold == "medium" %}
+            {% set severity_params = "CRITICAL,HIGH,MEDIUM" %}
+        {% elif threshold == "low" %}
+            {% set severity_params = "CRITICAL,HIGH,MEDIUM,LOW" %}
+        {% else %}
+            {% set severity_params = "" %}
+        {% endif %}
+    {% else %}
+        {% set severity_params = "" %}
+    {% endif %}
+    <a href="/projects/{{ project.name }}{% if severity_params %}?severity={{ severity_params }}{% endif %}" class="card" style="text-decoration: none; color: inherit;">
+        <div class="card-header">
+            <span class="card-title">{{ project.name }}</span>
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                {% if project.prevent_vul and project.severity_threshold %}
+                <span class="severity-badge severity-{{ project.severity_threshold|lower }}" style="font-size: 0.625rem; padding: 0.0625rem 0.375rem;" title="Images with {{ project.severity_threshold|upper }}+ vulnerabilities are blocked from deployment">
+                    {{ project.severity_threshold|upper }}
+                </span>
+                {% endif %}
+                {% if project.expiring_soon > 0 %}
+                <span class="expiring-badge">{{ project.expiring_soon }} expiring</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Open vulnerabilities #}
+        {% set open_total = project.open.critical + project.open.high + project.open.medium + project.open.low + project.open.unknown %}
+        {% set accepted_total = project.accepted.critical + project.accepted.high + project.accepted.medium + project.accepted.low + project.accepted.unknown %}
+        {% set fixed_total = project.fixed.critical + project.fixed.high + project.fixed.medium + project.fixed.low + project.fixed.unknown %}
+
+        <div class="mb-1">
+            <div class="flex items-center justify-between">
+                <span class="text-secondary" style="font-size: 0.8125rem;">Open</span>
+                <span style="font-size: 0.875rem; font-weight: 600;">{{ open_total }}</span>
+            </div>
+            {% if open_total > 0 %}
+            <div class="severity-bar">
+                {% if project.open.critical > 0 %}
+                <div class="severity-bar-segment" style="flex: {{ project.open.critical }}; background-color: var(--severity-critical);"></div>
+                {% endif %}
+                {% if project.open.high > 0 %}
+                <div class="severity-bar-segment" style="flex: {{ project.open.high }}; background-color: var(--severity-high);"></div>
+                {% endif %}
+                {% if project.open.medium > 0 %}
+                <div class="severity-bar-segment" style="flex: {{ project.open.medium }}; background-color: var(--severity-medium);"></div>
+                {% endif %}
+                {% if project.open.low > 0 %}
+                <div class="severity-bar-segment" style="flex: {{ project.open.low }}; background-color: var(--severity-low);"></div>
+                {% endif %}
+                {% if project.open.unknown > 0 %}
+                <div class="severity-bar-segment" style="flex: {{ project.open.unknown }}; background-color: var(--severity-unknown);"></div>
+                {% endif %}
+            </div>
+            <div style="display: flex; gap: 0.75rem; margin-top: 0.25rem; font-size: 0.6875rem;">
+                {% if project.open.critical > 0 %}<span style="color: var(--severity-critical);">C:{{ project.open.critical }}</span>{% endif %}
+                {% if project.open.high > 0 %}<span style="color: var(--severity-high);">H:{{ project.open.high }}</span>{% endif %}
+                {% if project.open.medium > 0 %}<span style="color: var(--severity-medium);">M:{{ project.open.medium }}</span>{% endif %}
+                {% if project.open.low > 0 %}<span style="color: var(--severity-low);">L:{{ project.open.low }}</span>{% endif %}
+                {% if project.open.unknown > 0 %}<span style="color: var(--severity-unknown);">U:{{ project.open.unknown }}</span>{% endif %}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="mb-1">
+            <div class="flex items-center justify-between">
+                <span class="text-secondary" style="font-size: 0.8125rem;">Accepted</span>
+                <span style="font-size: 0.875rem; font-weight: 600; color: var(--success);">{{ accepted_total }}</span>
+            </div>
+        </div>
+
+        <div>
+            <div class="flex items-center justify-between">
+                <span class="text-secondary" style="font-size: 0.8125rem;">Fixed</span>
+                <span style="font-size: 0.875rem; font-weight: 600; color: var(--text-muted);">{{ fixed_total }}</span>
+            </div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <h3>No projects yet</h3>
+    <p>Submit a scan via the API to get started.</p>
+</div>
+{% endif %}
+{% endblock %}

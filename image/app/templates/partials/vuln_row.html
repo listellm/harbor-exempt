@@ -1,0 +1,53 @@
+{% set children = vuln.get('_children', []) %}
+{% set group_id = vuln.get('_group_id', '') %}
+<tr id="vuln-row-{{ vuln.id }}">
+    <td>
+        {% if children %}
+        <span class="expand-toggle" data-group="{{ group_id }}" onclick="toggleGroup(this)" title="Show repositories">+</span>
+        {% endif %}
+        <a href="/projects/{{ project_name }}/vulnerabilities/{{ vuln.id }}" class="mono">{{ vuln.cve_id }}</a>
+        {% if children %}
+        <span class="text-muted" style="font-size: 0.75rem;">({{ children|length }} repos)</span>
+        {% endif %}
+    </td>
+    <td class="mono">{{ vuln.package }}</td>
+    <td>
+        <span class="severity-badge severity-{{ vuln.severity|lower }}">{{ vuln.severity }}</span>
+    </td>
+    <td>
+        <span class="status-badge status-{{ vuln.status }}">{{ vuln.status }}</span>
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ vuln.installed_version or '—' }}</td>
+    <td style="font-size: 0.8125rem;">
+        {%- set has_trivy = vuln.fixed_version and vuln.fixed_version != '' -%}
+        {%- set has_osv = vuln.has_fix and not has_trivy -%}
+        {%- if has_trivy -%}
+        <span class="fix-available" title="Fix available (Trivy)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>{{ vuln.fixed_version }}</span>
+        {%- elif has_osv -%}
+        <span class="fix-available" title="Fix available (OSV)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>OSV</span>
+        {%- else -%}
+        <span class="text-muted">—</span>
+        {%- endif -%}
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ vuln.first_seen_at|format_datetime }}</td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ vuln.last_seen_at|format_datetime }}</td>
+    <td>
+        {% if not children %}
+            {% if is_admin %}
+                {% if vuln.status == 'open' %}
+                <button class="btn btn-sm btn-primary"
+                        hx-get="/partials/accept-form/{{ vuln.id }}?project_name={{ project_name }}"
+                        hx-target="#vuln-row-{{ vuln.id }}"
+                        hx-swap="afterend">Accept</button>
+                {% elif vuln.status == 'accepted' and vuln.acceptance %}
+                <button class="btn btn-sm btn-danger"
+                        hx-post="/ui/revoke"
+                        hx-vals='{"acceptance_id": "{{ vuln.acceptance.id }}", "vulnerability_id": "{{ vuln.id }}", "project_name": "{{ project_name }}"}'
+                        hx-target="#vuln-row-{{ vuln.id }}"
+                        hx-swap="outerHTML"
+                        hx-confirm="Revoke acceptance for {{ vuln.cve_id }}?">Revoke</button>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </td>
+</tr>

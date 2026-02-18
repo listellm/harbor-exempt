@@ -1,0 +1,30 @@
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Project</th>
+                <th>Image</th>
+                <th>Package</th>
+                <th>Installed</th>
+                <th>Fixed In</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Accepted By</th>
+                <th>Expires</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for inst in instances %}
+            {% include "partials/cve_instance_row.html" %}
+            {% endfor %}
+            {% if not instances %}
+            <tr>
+                <td colspan="10" class="empty-state" style="padding: 2rem;">
+                    No instances found.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>

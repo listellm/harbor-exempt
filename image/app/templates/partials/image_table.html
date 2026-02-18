@@ -1,0 +1,42 @@
+<tbody id="image-table-body">
+    {% for img in images %}
+    {% include "partials/image_row.html" %}
+    {% endfor %}
+    {% if not images %}
+    <tr>
+        <td colspan="8" class="empty-state" style="padding: 2rem;">
+            No blocked images found. All images are clear for deployment.
+        </td>
+    </tr>
+    {% endif %}
+</tbody>
+
+{% if total_pages > 1 %}
+<tfoot>
+    <tr>
+        <td colspan="8">
+            <div class="pagination">
+                <span class="pagination-info">
+                    Showing {{ ((page - 1) * per_page) + 1 }}–{{ [page * per_page, total]|min }} of {{ total }}
+                </span>
+                <div class="pagination-buttons">
+                    {% if page > 1 %}
+                    <button class="btn btn-sm"
+                            hx-get="/partials/images?page={{ page - 1 }}&per_page={{ per_page }}{% if project %}&project={{ project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                            hx-target="#image-table-body"
+                            hx-swap="outerHTML"
+                            hx-select="tbody">Previous</button>
+                    {% endif %}
+                    {% if page < total_pages %}
+                    <button class="btn btn-sm"
+                            hx-get="/partials/images?page={{ page + 1 }}&per_page={{ per_page }}{% if project %}&project={{ project }}{% endif %}{% if search %}&search={{ search }}{% endif %}"
+                            hx-target="#image-table-body"
+                            hx-swap="outerHTML"
+                            hx-select="tbody">Next</button>
+                    {% endif %}
+                </div>
+            </div>
+        </td>
+    </tr>
+</tfoot>
+{% endif %}

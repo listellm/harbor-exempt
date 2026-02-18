@@ -1,0 +1,26 @@
+{{- if .Values.liquibase.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "harbor-exempt.fullname" . }}-liquibase
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "harbor-exempt.labels" . | nindent 4 }}
+data:
+  changelog-master.xml: |
+{{ .Files.Get "files/liquibase/changelog-master.xml" | indent 4 }}
+  001_initial_schema.sql: |
+{{ .Files.Get "files/liquibase/changesets/001_initial_schema.sql" | indent 4 }}
+  002_cve_indexes.sql: |
+{{ .Files.Get "files/liquibase/changesets/002_cve_indexes.sql" | indent 4 }}
+  003_add_cvss_score.sql: |
+{{ .Files.Get "files/liquibase/changesets/003_add_cvss_score.sql" | indent 4 }}
+  004_add_tag.sql: |
+{{ .Files.Get "files/liquibase/changesets/004_add_tag.sql" | indent 4 }}
+  005_add_harbor_times.sql: |
+{{ .Files.Get "files/liquibase/changesets/005_add_harbor_times.sql" | indent 4 }}
+  006_add_cve_fix_checks.sql: |
+{{ .Files.Get "files/liquibase/changesets/006_add_cve_fix_checks.sql" | indent 4 }}
+  007_auto_reconcile_index.sql: |
+{{ .Files.Get "files/liquibase/changesets/007_auto_reconcile_index.sql" | indent 4 }}
+{{- end }}

@@ -1,0 +1,35 @@
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% elif acceptances_created == 0 %}
+<div class="alert alert-warning">
+    No open vulnerabilities found for <span class="mono">{{ cve_id }}</span>
+    {% if projects %} in the selected projects{% endif %}.
+    They may already be accepted or not present.
+</div>
+{% else %}
+<div class="alert alert-success">
+    Accepted <span class="mono">{{ cve_id }}</span> across {{ acceptances_created }} vulnerability instance{{ 's' if acceptances_created != 1 else '' }}.
+</div>
+<div class="card mt-1">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>CVE</th>
+                    <th>Vulnerability ID</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for acc in acceptances %}
+                <tr>
+                    <td class="mono">{{ acc.cve_id }}</td>
+                    <td class="mono text-muted">{{ acc.vulnerability_id }}</td>
+                    <td><span class="status-badge status-accepted">{{ acc.status }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}

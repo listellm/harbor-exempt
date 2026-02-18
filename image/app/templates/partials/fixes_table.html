@@ -1,0 +1,9 @@
+{% for v in vulns %}
+    {% include "partials/fixes_row.html" %}
+{% else %}
+<tr>
+    <td colspan="9" class="text-muted" style="text-align: center; padding: 2rem;">
+        No accepted vulnerabilities with a known fix available.
+    </td>
+</tr>
+{% endfor %}

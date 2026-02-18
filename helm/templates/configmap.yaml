@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "harbor-exempt.fullname" . }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "harbor-exempt.labels" . | nindent 4 }}
+data:
+  HARBOR_EXEMPT_LOG_LEVEL: {{ .Values.harborExempt.logLevel | quote }}
+  HARBOR_EXEMPT_MAX_EXPIRY_DAYS: {{ .Values.harborExempt.maxExpiryDays | quote }}
+  HARBOR_EXEMPT_HARBOR_URL: {{ .Values.harbor.url | quote }}
+  HARBOR_EXEMPT_SCHEDULER_ENABLED: {{ .Values.harborExempt.schedulerEnabled | quote }}
+  HARBOR_EXEMPT_SYNC_INTERVAL_SECONDS: {{ .Values.harborExempt.syncIntervalSeconds | quote }}
+  HARBOR_EXEMPT_EXPIRE_INTERVAL_SECONDS: {{ .Values.harborExempt.expireIntervalSeconds | quote }}
+  HARBOR_EXEMPT_HARBOR_USERNAME: {{ .Values.harbor.username | quote }}
+  HARBOR_EXEMPT_EXCLUDED_PROJECTS: {{ .Values.harborExempt.excludedProjects | quote }}
+  HARBOR_EXEMPT_OSV_ENABLED: {{ .Values.osv.enabled | quote }}
+  HARBOR_EXEMPT_FIX_CHECK_INTERVAL_SECONDS: {{ .Values.harborExempt.fixCheckIntervalSeconds | quote }}
+  HARBOR_EXEMPT_FIX_CHECK_CACHE_TTL_SECONDS: {{ .Values.harborExempt.fixCheckCacheTtlSeconds | quote }}
+  {{- if .Values.migration.seed.enabled }}
+  HARBOR_EXEMPT_MIGRATION_SEED_PATH: "/data/seed.json"
+  {{- end }}

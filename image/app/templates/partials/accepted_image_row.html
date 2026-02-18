@@ -1,0 +1,35 @@
+<tr>
+    <td>
+        <a href="/images?project={{ img.project_name }}&repo={{ img.repository }}&status=accepted&from=accepted" class="mono">
+            {% if img.latest_tag %}{{ img.repository }}:{{ img.latest_tag }}{% else %}{{ img.latest_image or img.repository }}{% endif %}
+        </a>
+    </td>
+    <td>{{ img.project_name }}</td>
+    <td>
+        <span style="font-weight: 600; color: var(--success);">{{ img.blocking_accepted }}</span>
+    </td>
+    <td>
+        {% if img.has_fix %}
+        <span class="fix-available">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 1.3a1 1 0 0 1 0 1.4l-1 1L11.3 1.3l1-1a1 1 0 0 1 1.4 0zM3 11.3l7.3-7.3 2.4 2.4L5.3 13.7 2 14.7z"/>
+            </svg>
+            Yes
+        </span>
+        {% else %}
+        <span class="text-muted">No</span>
+        {% endif %}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.earliest_expiry|expiry_age_class }}">
+        {{ img.earliest_expiry|format_datetime("%d/%m/%Y") if img.earliest_expiry else '—' }}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.push_time|scan_age_class }}">
+        {{ img.push_time|format_datetime if img.push_time else '—' }}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.pull_time|scan_age_class }}">
+        {{ img.pull_time|format_datetime if img.pull_time else '—' }}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.last_scanned|scan_age_class }}">
+        {{ img.last_scanned|format_datetime if img.last_scanned else '—' }}
+    </td>
+</tr>

@@ -1,0 +1,43 @@
+<tr>
+    <td>
+        <a href="/cves/{{ cve.cve_id }}" class="mono">{{ cve.cve_id }}</a>
+    </td>
+    <td>
+        <span class="severity-badge severity-{{ cve.severity|lower }}">{{ cve.severity }}</span>
+    </td>
+    <td>
+        {% if cve.cvss_score is not none %}
+        <span class="mono" style="font-size: 0.875rem;{% if cve.cvss_score >= 9.0 %} color: var(--severity-critical);{% elif cve.cvss_score >= 7.0 %} color: var(--warning);{% endif %}">{{ '%.1f'|format(cve.cvss_score) }}</span>
+        {% else %}
+        <span class="text-muted" style="font-size: 0.8125rem;">&mdash;</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if cve.has_fix %}
+        <span style="color: var(--success); font-size: 0.875rem;" title="Fix available in at least one instance">&#10003;</span>
+        {% else %}
+        <span class="text-muted" style="font-size: 0.8125rem;">&mdash;</span>
+        {% endif %}
+    </td>
+    <td>
+        <span style="font-size: 0.875rem;">{{ cve.project_count }} project{{ 's' if cve.project_count != 1 else '' }}</span>
+    </td>
+    <td>
+        <span style="font-size: 0.875rem;">{{ cve.image_count }} image{{ 's' if cve.image_count != 1 else '' }}</span>
+    </td>
+    <td>
+        {% set total_active = cve.open_count + cve.accepted_count %}
+        {% if cve.open_count > 0 and cve.accepted_count == 0 %}
+            <span class="status-badge status-open"{% if cve.open_projects %} title="{{ cve.open_projects }}"{% endif %}>{{ cve.open_count }} open</span>
+        {% elif cve.open_count == 0 and cve.accepted_count > 0 %}
+            <span class="status-badge status-accepted"{% if cve.accepted_projects %} title="{{ cve.accepted_projects }}"{% endif %}>all accepted</span>
+        {% elif cve.open_count > 0 and cve.accepted_count > 0 %}
+            <span class="status-badge status-open"{% if cve.open_projects %} title="{{ cve.open_projects }}"{% endif %}>{{ cve.open_count }} open</span>
+            <span class="status-badge status-accepted" style="margin-left: 0.25rem;"{% if cve.accepted_projects %} title="{{ cve.accepted_projects }}"{% endif %}>{{ cve.accepted_count }} accepted</span>
+        {% else %}
+            <span class="status-badge status-fixed">fixed</span>
+        {% endif %}
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ cve.first_seen|format_datetime }}</td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ cve.last_seen|format_datetime }}</td>
+</tr>

@@ -1,0 +1,23 @@
+{% for event in events %}
+<tr>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ event.action_at|format_datetime }}</td>
+    <td>
+        {% if event.action == 'accepted' %}
+        <span class="status-badge status-accepted">Accepted</span>
+        {% elif event.action == 'revoked' %}
+        <span class="status-badge status-open">Revoked</span>
+        {% elif event.action == 'expired' %}
+        <span class="status-badge" style="background-color: var(--warning-bg); color: var(--warning);">Expired</span>
+        {% endif %}
+    </td>
+    <td>{{ event.action_by }}</td>
+    <td class="mono">{{ event.cve_id }}</td>
+    <td><a href="/projects/{{ event.project_name }}">{{ event.project_name }}</a></td>
+    <td>
+        <span class="severity-badge severity-{{ event.severity|lower }}">{{ event.severity }}</span>
+    </td>
+    <td style="max-width: 250px; font-size: 0.8125rem; color: var(--text-secondary);">
+        {{ event.justification[:100] }}{% if event.justification|length > 100 %}...{% endif %}
+    </td>
+</tr>
+{% endfor %}

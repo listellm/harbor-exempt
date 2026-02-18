@@ -1,0 +1,250 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "harbor-exempt.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "harbor-exempt.labels" . | nindent 4 }}
+spec:
+  revisionHistoryLimit: {{ .Values.revisionHistoryLimit }}
+  replicas: {{ .Values.replicas }}
+  strategy:
+    type: {{ .Values.updateStrategy.type }}
+    {{- if eq .Values.updateStrategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.updateStrategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.updateStrategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "harbor-exempt.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/configs: {{ include "harbor-exempt.configsChecksum" . }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "harbor-exempt.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 30
+      serviceAccountName: {{ include "harbor-exempt.serviceAccountName" . }}
+      automountServiceAccountToken: false
+      {{- if .Values.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.liquibase.enabled .Values.database.createDatabase.enabled }}
+      initContainers:
+        {{- if and .Values.database.createDatabase.enabled (not .Values.database.postgresql.enabled) }}
+        - name: create-database
+          image: {{ .Values.database.createDatabase.image }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Checking if database '${PGDATABASE}' exists..."
+              if psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d postgres \
+                -tc "SELECT 1 FROM pg_database WHERE datname = '${PGDATABASE}'" | grep -q 1; then
+                echo "Database '${PGDATABASE}' already exists"
+              else
+                echo "Creating database '${PGDATABASE}'..."
+                psql -h "${PGHOST}" -p "${PGPORT}" -U "${PGUSER}" -d postgres \
+                  -c "CREATE DATABASE \"${PGDATABASE}\""
+                echo "Database created"
+              fi
+          env:
+            - name: PGHOST
+              value: {{ .Values.database.host | quote }}
+            - name: PGPORT
+              value: {{ .Values.database.port | quote }}
+            - name: PGDATABASE
+              value: {{ .Values.database.name | quote }}
+            - name: PGSSLMODE
+              value: {{ .Values.database.sslmode | quote }}
+            - name: PGUSER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-password
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 70
+            runAsGroup: 70
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.database.createDatabase.resources | nindent 12 }}
+        {{- end }}
+        {{- if .Values.liquibase.enabled }}
+        - name: liquibase-migrations
+          image: {{ .Values.liquibase.image }}
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -e
+              echo "Running Liquibase migrations..."
+              {{ .Values.liquibase.command }} \
+                --search-path=/changelog \
+                --changelog-file=changelog-master.xml \
+                --url="${LIQUIBASE_COMMAND_URL}" \
+                update
+              echo "Migrations complete"
+          env:
+            - name: LIQUIBASE_COMMAND_URL
+              {{- if .Values.database.postgresql.enabled }}
+              value: "jdbc:postgresql://{{ include "harbor-exempt.fullname" . }}-postgresql.{{ .Release.Namespace }}.svc.cluster.local:5432/{{ .Values.database.name }}"
+              {{- else }}
+              value: "jdbc:postgresql://{{ .Values.database.host }}:{{ .Values.database.port }}/{{ .Values.database.name }}{{- if .Values.database.sslmode }}?sslmode={{ .Values.database.sslmode }}{{- end }}"
+              {{- end }}
+            - name: LIQUIBASE_COMMAND_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-username
+            - name: LIQUIBASE_COMMAND_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-password
+            - name: LIQUIBASE_HUB_MODE
+              value: "off"
+          volumeMounts:
+            - name: liquibase-changelog
+              mountPath: /changelog
+              readOnly: true
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            {{- toYaml .Values.liquibase.resources | nindent 12 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- if .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "harbor-exempt.fullname" . }}-config
+          env:
+            {{- /* Database connection — separate env vars to avoid URL-encoding issues */}}
+            - name: HARBOR_EXEMPT_DB_HOST
+              {{- if .Values.database.host }}
+              value: {{ .Values.database.host | quote }}
+              {{- else }}
+              value: "{{ include "harbor-exempt.fullname" . }}-postgresql.{{ .Release.Namespace }}.svc.cluster.local"
+              {{- end }}
+            - name: HARBOR_EXEMPT_DB_PORT
+              value: {{ .Values.database.port | quote }}
+            - name: HARBOR_EXEMPT_DB_NAME
+              value: {{ .Values.database.name | quote }}
+            {{- if .Values.database.sslmode }}
+            - name: HARBOR_EXEMPT_DB_SSLMODE
+              value: {{ .Values.database.sslmode | quote }}
+            {{- end }}
+            - name: HARBOR_EXEMPT_DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-username
+            - name: HARBOR_EXEMPT_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: db-password
+            - name: HARBOR_EXEMPT_HARBOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "harbor-exempt.fullname" . }}-secret
+                  key: harbor-password
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            {{- if .Values.migration.seed.enabled }}
+            - name: migration-seed
+              mountPath: /data/seed.json
+              subPath: seed.json
+              readOnly: true
+            {{- end }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        {{- if .Values.migration.seed.enabled }}
+        - name: migration-seed
+          configMap:
+            name: {{ include "harbor-exempt.fullname" . }}-seed
+        {{- end }}
+        {{- if .Values.liquibase.enabled }}
+        - name: liquibase-changelog
+          configMap:
+            name: {{ include "harbor-exempt.fullname" . }}-liquibase
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

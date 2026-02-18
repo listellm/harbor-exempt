@@ -1,0 +1,58 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_DB: harbor_exempt
+      POSTGRES_USER: harbor_exempt
+      POSTGRES_PASSWORD: harbor-exempt-local-password  # pragma: allowlist secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U harbor_exempt"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  liquibase:
+    image: liquibase/liquibase:4
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./helm/files/liquibase:/liquibase/source:ro
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        mkdir -p /tmp/changelog
+        cp /liquibase/source/changelog-master.xml /tmp/changelog/
+        cp /liquibase/source/changesets/*.sql /tmp/changelog/
+        cd /tmp/changelog
+        liquibase \
+          --classpath=/tmp/changelog \
+          --changelog-file=changelog-master.xml \
+          --url=jdbc:postgresql://postgres:5432/harbor_exempt \
+          --username=harbor_exempt \
+          --password=harbor-exempt-local-password \
+          update
+    restart: "no"
+
+  harbor-exempt:
+    build: image/
+    depends_on:
+      liquibase:
+        condition: service_completed_successfully
+    environment:
+      HARBOR_EXEMPT_DB_HOST: postgres
+      HARBOR_EXEMPT_DB_PORT: "5432"
+      HARBOR_EXEMPT_DB_NAME: harbor_exempt
+      HARBOR_EXEMPT_DB_USERNAME: harbor_exempt
+      HARBOR_EXEMPT_DB_PASSWORD: harbor-exempt-local-password  # pragma: allowlist secret
+      HARBOR_EXEMPT_SCHEDULER_ENABLED: "false"
+      HARBOR_EXEMPT_LOG_LEVEL: DEBUG
+    ports:
+      - "8000:8000"
+
+volumes:
+  pgdata:
