@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}CVEs{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>CVEs</h1>
+    <p>Unique vulnerabilities aggregated across all projects</p>
+</div>
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/cves"
+          hx-target="#cve-table-container"
+          hx-swap="innerHTML"
+          hx-trigger="submit, change from:.checkbox-group input"
+          hx-indicator=".filter-indicator">
+        <div class="form-group filter-group">
+            <label>Severity</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="severity" value="CRITICAL" {% if 'CRITICAL' in (severity or []) %}checked{% endif %}> Critical</label>
+                <label><input type="checkbox" name="severity" value="HIGH" {% if 'HIGH' in (severity or []) %}checked{% endif %}> High</label>
+                <label><input type="checkbox" name="severity" value="MEDIUM" {% if 'MEDIUM' in (severity or []) %}checked{% endif %}> Medium</label>
+                <label><input type="checkbox" name="severity" value="LOW" {% if 'LOW' in (severity or []) %}checked{% endif %}> Low</label>
+                <label><input type="checkbox" name="severity" value="UNKNOWN" {% if 'UNKNOWN' in (severity or []) %}checked{% endif %}> Unknown</label>
+            </div>
+        </div>
+        <div class="form-group filter-group">
+            <label>Status</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="status" value="open" {% if 'open' in (status or []) %}checked{% endif %}> Open</label>
+                <label><input type="checkbox" name="status" value="partial" {% if 'partial' in (status or []) %}checked{% endif %}> Partially accepted</label>
+                <label><input type="checkbox" name="status" value="accepted" {% if 'accepted' in (status or []) %}checked{% endif %}> Fully accepted</label>
+                <label><input type="checkbox" name="status" value="fixed" {% if 'fixed' in (status or []) %}checked{% endif %}> Fixed</label>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="search">Search CVE</label>
+            <input type="text" name="search" id="search" class="form-control mono"
+                   value="{{ search }}" placeholder="CVE-2025-..." style="width: 200px;"
+                   hx-get="/partials/cves" hx-target="#cve-table-container" hx-swap="innerHTML"
+                   hx-trigger="keyup changed delay:300ms" hx-include="closest form">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Apply
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div id="cve-table-container">
+    {% include "partials/cve_table.html" %}
+</div>
+{% endblock %}

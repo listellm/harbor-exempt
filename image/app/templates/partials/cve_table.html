@@ -1,0 +1,90 @@
+{% macro sort_url(col) %}
+/partials/cves?page=1&per_page={{ per_page }}{% for s in severity %}&severity={{ s }}{% endfor %}{% for st in status %}&status={{ st }}{% endfor %}{% if search %}&search={{ search }}{% endif %}&sort={{ col }}&sort_dir={% if sort == col and sort_dir == 'asc' %}desc{% else %}asc{% endif %}
+{%- endmacro %}
+
+{% macro sort_arrow(col) %}
+{% if sort == col %}
+<span class="sort-arrow">{% if sort_dir == 'asc' %}&#9650;{% else %}&#9660;{% endif %}</span>
+{% endif %}
+{%- endmacro %}
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('cve_id') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">CVE {{ sort_arrow('cve_id') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('severity') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Severity {{ sort_arrow('severity') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('score') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Score {{ sort_arrow('score') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('fix') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Fix Available {{ sort_arrow('fix') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('projects') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Projects {{ sort_arrow('projects') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('images') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Images {{ sort_arrow('images') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('status') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML">Status {{ sort_arrow('status') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('first_seen') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML" title="When this CVE was first detected across all images">Vuln first seen {{ sort_arrow('first_seen') }}</th>
+                    <th class="sortable-header"
+                        hx-get="{{ sort_url('last_seen') }}"
+                        hx-target="#cve-table-container"
+                        hx-swap="innerHTML" title="Most recent scan that still reported this CVE">Vuln last seen {{ sort_arrow('last_seen') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cve in cves %}
+                {% include "partials/cve_row.html" %}
+                {% endfor %}
+                {% if not cves %}
+                <tr>
+                    <td colspan="9" class="empty-state" style="padding: 2rem;">
+                        No CVEs match the current filters.
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if total > 0 %}
+    <div class="pagination">
+        <span class="pagination-info">
+            Showing {{ ((page - 1) * per_page) + 1 }}&ndash;{{ [page * per_page, total]|min }} of {{ total }}
+        </span>
+        <div class="pagination-buttons">
+            {% if page > 1 %}
+            <button class="btn btn-sm"
+                    hx-get="/partials/cves?page={{ page - 1 }}&per_page={{ per_page }}{% for s in severity %}&severity={{ s }}{% endfor %}{% for st in status %}&status={{ st }}{% endfor %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}&sort_dir={{ sort_dir }}{% endif %}"
+                    hx-target="#cve-table-container"
+                    hx-swap="innerHTML">Previous</button>
+            {% endif %}
+            {% if page * per_page < total %}
+            <button class="btn btn-sm"
+                    hx-get="/partials/cves?page={{ page + 1 }}&per_page={{ per_page }}{% for s in severity %}&severity={{ s }}{% endfor %}{% for st in status %}&status={{ st }}{% endfor %}{% if search %}&search={{ search }}{% endif %}{% if sort %}&sort={{ sort }}&sort_dir={{ sort_dir }}{% endif %}"
+                    hx-target="#cve-table-container"
+                    hx-swap="innerHTML">Next</button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>

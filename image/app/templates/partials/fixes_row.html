@@ -1,0 +1,49 @@
+<tr>
+    <td class="mono">
+        <a href="/cves/{{ v.cve_id }}" class="mono">{{ v.cve_id }}</a>
+    </td>
+    <td>
+        <span class="severity-badge severity-{{ v.severity|lower }}">{{ v.severity }}</span>
+    </td>
+    <td class="mono" style="font-size: 0.8125rem;">{{ v.package }}</td>
+    <td class="mono" style="font-size: 0.8125rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="{{ v.repository }}">{{ v.repository }}</td>
+    <td>
+        {% if v.fix_source == 'both' %}
+        <span class="fix-available" title="Fix available via Trivy and OSV">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>
+            Both
+        </span>
+        {% elif v.fix_source == 'trivy' %}
+        <span class="fix-available" title="Fix available via Trivy scanner">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>
+            Trivy
+        </span>
+        {% else %}
+        <span class="fix-available" title="Fix available via OSV.dev">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>
+            OSV
+        </span>
+        {% endif %}
+    </td>
+    <td style="font-size: 0.8125rem;">
+        {% if v.fixed_version %}
+        <span class="mono">{{ v.fixed_version }}</span>
+        {% elif v.osv_fixed_versions %}
+        <span class="text-muted mono" style="font-size: 0.75rem;">
+            {% for fv in v.osv_fixed_versions[:2] %}{{ fv.fixed }}{% if not loop.last %}, {% endif %}{% endfor %}
+            {% if v.osv_fixed_versions|length > 2 %}&hellip;{% endif %}
+        </span>
+        {% else %}
+        <span class="text-muted">&mdash;</span>
+        {% endif %}
+    </td>
+    <td>
+        <a href="/projects/{{ v.project }}">{{ v.project }}</a>
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">
+        {% if v.acceptance %}{{ v.acceptance.accepted_by }}{% else %}&mdash;{% endif %}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ v.acceptance.expires_at|expiry_age_class if v.acceptance else '' }}">
+        {% if v.acceptance %}{{ v.acceptance.expires_at|format_datetime("%d/%m/%Y") }}{% else %}&mdash;{% endif %}
+    </td>
+</tr>

@@ -1,0 +1,6 @@
+download-external-modules: false
+external-modules-download-path: .external_modules
+framework:
+  - helm
+  - kubernetes
+skip-check: []

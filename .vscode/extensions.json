@@ -1,0 +1,15 @@
+{
+  "recommendations": [
+    "streetsidesoftware.code-spell-checker",
+    "yzhang.markdown-all-in-one",
+    "hashicorp.terraform",
+    "gruntfuggly.todo-tree",
+    "jkiviluoto.tws",
+    "ms-azure-devops.azure-pipelines",
+    "ms-vscode.powershell",
+    "editorconfig.editorconfig",
+    "hashhar.gitattributes",
+    "smoore.yaml-path",
+    "mattyjones.vscode-tickscript"
+  ]
+}

@@ -1,0 +1,9 @@
+{% if error %}
+<tr id="vuln-row-{{ vuln.id }}">
+    <td colspan="{{ colspan|default('9') }}">
+        <div class="alert alert-error">{{ error }}</div>
+    </td>
+</tr>
+{% else %}
+{% include "partials/vuln_row.html" %}
+{% endif %}

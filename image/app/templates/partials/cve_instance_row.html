@@ -1,0 +1,48 @@
+<tr id="cve-inst-row-{{ inst.id }}">
+    <td>
+        <a href="/projects/{{ inst.project_name }}">{{ inst.project_name }}</a>
+    </td>
+    <td class="mono" style="font-size: 0.8125rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="{{ inst.repository }}">{{ inst.repository }}</td>
+    <td class="mono" style="font-size: 0.8125rem;">{{ inst.package }}</td>
+    <td class="text-muted" style="font-size: 0.8125rem;">{{ inst.installed_version or '&mdash;' }}</td>
+    <td style="font-size: 0.8125rem;">
+        {%- set has_trivy = inst.fixed_version and inst.fixed_version != '' -%}
+        {%- set has_osv = inst.has_fix and not has_trivy -%}
+        {%- if has_trivy -%}
+        <span class="fix-available" title="Fix available (Trivy)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>{{ inst.fixed_version }}</span>
+        {%- elif has_osv -%}
+        <span class="fix-available" title="Fix available (OSV)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/></svg>&mdash; (OSV)</span>
+        {%- else -%}
+        <span class="text-muted">&mdash;</span>
+        {%- endif -%}
+    </td>
+    <td>
+        <span class="severity-badge severity-{{ inst.severity|lower }}">{{ inst.severity }}</span>
+    </td>
+    <td>
+        <span class="status-badge status-{{ inst.status }}">{{ inst.status }}</span>
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">
+        {% if inst.acceptance %}{{ inst.acceptance.accepted_by }}{% else %}&mdash;{% endif %}
+    </td>
+    <td class="text-muted" style="font-size: 0.8125rem;">
+        {% if inst.acceptance %}{{ inst.acceptance.expires_at|format_datetime }}{% else %}&mdash;{% endif %}
+    </td>
+    <td>
+        {% if is_admin %}
+            {% if inst.status == 'open' %}
+            <button class="btn btn-sm btn-primary"
+                    hx-get="/partials/accept-form/{{ inst.id }}?project_name={{ inst.project_name }}&context=cve_instance"
+                    hx-target="#cve-inst-row-{{ inst.id }}"
+                    hx-swap="afterend">Accept</button>
+            {% elif inst.status == 'accepted' and inst.acceptance %}
+            <button class="btn btn-sm btn-danger"
+                    hx-post="/ui/revoke"
+                    hx-vals='{"acceptance_id": "{{ inst.acceptance.id }}", "vulnerability_id": "{{ inst.id }}", "project_name": "{{ inst.project_name }}", "context": "cve_instance"}'
+                    hx-target="#cve-inst-row-{{ inst.id }}"
+                    hx-swap="outerHTML"
+                    hx-confirm="Revoke acceptance for {{ inst.cve_id }} in {{ inst.project_name }}?">Revoke</button>
+            {% endif %}
+        {% endif %}
+    </td>
+</tr>

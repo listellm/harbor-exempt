@@ -1,0 +1,57 @@
+<tr id="accept-form-{{ vuln_id }}">
+    <td colspan="{% if context == 'cve_instance' %}10{% else %}9{% endif %}">
+        <form hx-post="/ui/accept"
+              hx-target="{% if context == 'cve_instance' %}#cve-inst-row-{{ vuln_id }}{% else %}#vuln-row-{{ vuln_id }}{% endif %}"
+              hx-swap="outerHTML"
+              hx-on::after-request="if(event.detail.successful) document.getElementById('accept-form-{{ vuln_id }}').remove()"
+              style="display: flex; gap: 0.75rem; align-items: flex-end; padding: 0.5rem 0;">
+            <input type="hidden" name="vulnerability_id" value="{{ vuln_id }}">
+            <input type="hidden" name="project_name" value="{{ project_name }}">
+            {% if context %}<input type="hidden" name="context" value="{{ context }}">{% endif %}
+            <div class="form-group" style="flex: 2; margin-bottom: 0;">
+                <label for="justification-{{ vuln_id }}">Justification</label>
+                <textarea name="justification" id="justification-{{ vuln_id }}" class="form-control"
+                          rows="2" required placeholder="Why is this risk acceptable?"></textarea>
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label for="expires-{{ vuln_id }}">Expires</label>
+                <input type="text" name="expires_at" id="expires-{{ vuln_id }}" class="form-control flatpickr-date"
+                       required placeholder="Select date">
+            </div>
+            {% if siblings is defined and siblings|length > 1 %}
+            <div style="font-size: 0.8125rem; color: var(--text-muted); align-self: flex-start; line-height: 1.4;">
+                <div style="margin-bottom: 0.25rem;">Affects {{ siblings|length }} instances in this project:</div>
+                <ul style="margin: 0; padding-left: 1.25rem; list-style: disc;">
+                    {% for sibling in siblings %}
+                    <li>{{ sibling.repository }} ({{ sibling.package }})</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+            <div style="display: flex; gap: 0.5rem;">
+                <button type="submit" class="btn btn-sm btn-primary">
+                    Confirm
+                    <span class="htmx-indicator spinner"></span>
+                </button>
+                <button type="button" class="btn btn-sm"
+                        onclick="document.getElementById('accept-form-{{ vuln_id }}').remove()">Cancel</button>
+            </div>
+        </form>
+    </td>
+</tr>
+<script>
+    requestAnimationFrame(function () {
+        var el = document.getElementById('expires-{{ vuln_id }}');
+        if (el) {
+            flatpickr(el, {
+                dateFormat: 'Y-m-d',
+                altInput: true,
+                altFormat: 'd/m/Y',
+                defaultDate: new Date().fp_incr(1),
+                minDate: 'today',
+                maxDate: new Date().fp_incr({{ max_expiry_days }}),
+                theme: 'dark'
+            });
+        }
+    });
+</script>

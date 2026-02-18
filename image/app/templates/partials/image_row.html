@@ -1,0 +1,48 @@
+<tr>
+    <td>
+        <a href="/images?project={{ img.project_name }}&repo={{ img.repository }}" class="mono">
+            {% if img.latest_tag %}{{ img.repository }}:{{ img.latest_tag }}{% else %}{{ img.latest_image or img.repository }}{% endif %}
+        </a>
+    </td>
+    <td>{{ img.project_name }}</td>
+    <td>
+        <span style="font-weight: 600; color: var(--error);">{{ img.blocking_count }}</span>
+    </td>
+    <td>
+        {% if img.critical_count > 0 %}
+        <span style="color: var(--severity-critical); font-weight: 600;">{{ img.critical_count }}</span>
+        {% else %}
+        <span class="text-muted">0</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if img.high_count > 0 %}
+        <span style="color: var(--severity-high); font-weight: 600;">{{ img.high_count }}</span>
+        {% else %}
+        <span class="text-muted">0</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if img.medium_count > 0 %}
+        <span style="color: var(--severity-medium); font-weight: 600;">{{ img.medium_count }}</span>
+        {% else %}
+        <span class="text-muted">0</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if img.low_count > 0 %}
+        <span style="color: var(--severity-low); font-weight: 600;">{{ img.low_count }}</span>
+        {% else %}
+        <span class="text-muted">0</span>
+        {% endif %}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.push_time|scan_age_class }}">
+        {{ img.push_time|format_datetime if img.push_time else '—' }}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.pull_time|scan_age_class }}">
+        {{ img.pull_time|format_datetime if img.pull_time else '—' }}
+    </td>
+    <td style="font-size: 0.8125rem;" class="{{ img.last_scanned|scan_age_class }}">
+        {{ img.last_scanned|format_datetime if img.last_scanned else '—' }}
+    </td>
+</tr>

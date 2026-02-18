@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Images — Blocked{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Images</h1>
+    <p>Images blocked from pull due to vulnerabilities exceeding project thresholds</p>
+</div>
+
+{% include "partials/image_sub_tabs.html" %}
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/images"
+          hx-target="#image-table-body"
+          hx-swap="outerHTML"
+          hx-select="tbody"
+          hx-trigger="submit, change from:#project"
+          hx-indicator=".filter-indicator">
+        <div class="form-group">
+            <label for="project">Project</label>
+            <select name="project" id="project" class="form-control" style="width: 200px;">
+                <option value="">All projects</option>
+                {% for p in all_projects %}
+                <option value="{{ p }}" {% if project == p %}selected{% endif %}>{{ p }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="search">Search image</label>
+            <input type="text" name="search" id="search" class="form-control mono"
+                   value="{{ search }}" placeholder="repository name..." style="width: 250px;">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Apply
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Project</th>
+                    <th>Blocking</th>
+                    <th>Critical</th>
+                    <th>High</th>
+                    <th>Medium</th>
+                    <th>Low</th>
+                    <th title="When this image was pushed to Harbor">Pushed</th>
+                    <th title="When this image was last pulled from Harbor">Last pulled</th>
+                    <th>Last scanned</th>
+                </tr>
+            </thead>
+            {% include "partials/image_table.html" %}
+        </table>
+    </div>
+</div>
+{% endblock %}

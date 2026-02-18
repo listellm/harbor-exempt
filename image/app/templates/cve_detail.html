@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+
+{% block title %}{{ cve_id }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/cves">CVEs</a>
+    <span class="separator">/</span>
+    <span>{{ cve_id }}</span>
+</div>
+
+<div class="page-header">
+    <div class="flex items-center gap-1">
+        <h1 class="mono">{{ cve_id }}</h1>
+        <span class="severity-badge severity-{{ severity|lower }}">{{ severity }}</span>
+        {% if cvss_score is defined and cvss_score is not none %}
+        <span class="mono" style="font-size: 1rem; margin-left: 0.25rem;{% if cvss_score >= 9.0 %} color: var(--severity-critical);{% elif cvss_score >= 7.0 %} color: var(--warning);{% endif %}">{{ '%.1f'|format(cvss_score) }}</span>
+        {% endif %}
+    </div>
+</div>
+
+{% if description %}
+<div class="card mb-2">
+    <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Description</label>
+    <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6;">{{ description }}</p>
+</div>
+{% endif %}
+
+{% if references %}
+<div class="card mb-2">
+    <label style="display: block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">References</label>
+    <ul style="list-style: none; font-size: 0.8125rem;">
+        {% for ref in references %}
+        <li style="margin-bottom: 0.25rem;"><a href="{{ ref }}" target="_blank" rel="noopener noreferrer">{{ ref }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div id="cve-detail-body"
+     hx-get="/partials/cves/{{ cve_id }}/detail-body"
+     hx-trigger="refreshCveInstances from:body"
+     hx-swap="innerHTML">
+    {% include "partials/cve_detail_body.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        defaultDate: new Date().fp_incr(1),
+        minDate: 'today',
+        maxDate: new Date().fp_incr({{ max_expiry_days }}),
+        theme: 'dark'
+    });
+</script>
+{% endblock %}

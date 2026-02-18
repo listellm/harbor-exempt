@@ -1,0 +1,11 @@
+{{- if .Values.migration.seed.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "harbor-exempt.fullname" . }}-seed
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "harbor-exempt.labels" . | nindent 4 }}
+data:
+  seed.json: {{ dict "acceptances" .Values.migration.seed.data | toJson | quote }}
+{{- end }}

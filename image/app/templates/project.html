@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project_name }}{% endblock %}
+
+{% block content %}
+<div class="breadcrumb">
+    <a href="/projects">Projects</a>
+    <span class="separator">/</span>
+    <span>{{ project_name }}</span>
+</div>
+
+<div class="page-header">
+    <h1>{{ project_name }}</h1>
+    <p>{{ total }} vulnerabilities</p>
+</div>
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/projects/{{ project_name }}/vulnerabilities"
+          hx-target="#vuln-table-body"
+          hx-swap="outerHTML"
+          hx-select="tbody"
+          hx-trigger="submit, change from:.checkbox-group, refreshVulnTable from:body"
+          hx-indicator=".filter-indicator">
+        <div class="form-group filter-group">
+            <label>Status</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="status" value="open" {% if 'open' in (status or []) %}checked{% endif %}> Open</label>
+                <label><input type="checkbox" name="status" value="accepted" {% if 'accepted' in (status or []) %}checked{% endif %}> Accepted</label>
+                <label><input type="checkbox" name="status" value="fixed" {% if 'fixed' in (status or []) %}checked{% endif %}> Fixed</label>
+            </div>
+        </div>
+        <div class="form-group filter-group">
+            <label>Severity</label>
+            <div class="checkbox-group">
+                <label><input type="checkbox" name="severity" value="CRITICAL" {% if 'CRITICAL' in (severity or []) %}checked{% endif %}> Critical</label>
+                <label><input type="checkbox" name="severity" value="HIGH" {% if 'HIGH' in (severity or []) %}checked{% endif %}> High</label>
+                <label><input type="checkbox" name="severity" value="MEDIUM" {% if 'MEDIUM' in (severity or []) %}checked{% endif %}> Medium</label>
+                <label><input type="checkbox" name="severity" value="LOW" {% if 'LOW' in (severity or []) %}checked{% endif %}> Low</label>
+                <label><input type="checkbox" name="severity" value="UNKNOWN" {% if 'UNKNOWN' in (severity or []) %}checked{% endif %}> Unknown</label>
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Apply
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>CVE</th>
+                    <th>Package</th>
+                    <th>Severity</th>
+                    <th>Status</th>
+                    <th>Installed</th>
+                    <th>Fixed</th>
+                    <th title="When this vulnerability was first detected on this image">Vuln first seen</th>
+                    <th title="Most recent scan that still reported this vulnerability">Vuln last seen</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            {% include "partials/vuln_table.html" %}
+        </table>
+    </div>
+</div>
+{% endblock %}

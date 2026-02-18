@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Fixes{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="page-header-content">
+        <h1 class="page-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 0.4rem;">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.106-3.105c.32-.322.863-.22.983.218a6 6 0 0 1-8.259 7.057l-7.91 7.91a1 1 0 0 1-2.999-3l7.91-7.91a6 6 0 0 1 7.057-8.259c.438.12.54.662.219.984z"/>
+            </svg>
+            Fixable Vulnerabilities
+        </h1>
+        <p class="page-subtitle">Accepted CVEs with a fix available from Trivy or OSV.dev</p>
+    </div>
+</div>
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/fixes"
+          hx-target="#fixes-table-body"
+          hx-trigger="submit, change from:.form-group"
+          hx-push-url="false">
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <input type="hidden" name="order" value="{{ order }}">
+
+        <div class="form-group">
+            <label>Project</label>
+            <select name="project" class="form-control" style="width: 200px;">
+                <option value="">All projects</option>
+                {% for proj in all_projects %}
+                <option value="{{ proj }}" {% if project_filter == proj %}selected{% endif %}>{{ proj }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Severity</label>
+            <select name="severity" class="form-control" style="width: 140px;">
+                <option value="">All</option>
+                <option value="CRITICAL" {% if severity_filter == 'CRITICAL' %}selected{% endif %}>Critical</option>
+                <option value="HIGH" {% if severity_filter == 'HIGH' %}selected{% endif %}>High</option>
+                <option value="MEDIUM" {% if severity_filter == 'MEDIUM' %}selected{% endif %}>Medium</option>
+                <option value="LOW" {% if severity_filter == 'LOW' %}selected{% endif %}>Low</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label>Fix Source</label>
+            <select name="source" class="form-control" style="width: 140px;">
+                <option value="">All</option>
+                <option value="trivy" {% if source_filter == 'trivy' %}selected{% endif %}>Trivy</option>
+                <option value="osv" {% if source_filter == 'osv' %}selected{% endif %}>OSV</option>
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-secondary">Apply</button>
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "cve", "order": "{% if sort == 'cve' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    CVE {% if sort == 'cve' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "severity", "order": "{% if sort == 'severity' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Severity {% if sort == 'severity' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "package", "order": "{% if sort == 'package' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Package {% if sort == 'package' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "repository", "order": "{% if sort == 'repository' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Repository {% if sort == 'repository' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "fix_source", "order": "{% if sort == 'fix_source' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Fix Source {% if sort == 'fix_source' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th>Fix Version</th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "project", "order": "{% if sort == 'project' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Project {% if sort == 'project' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "accepted_by", "order": "{% if sort == 'accepted_by' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Accepted By {% if sort == 'accepted_by' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+                <th class="sortable"
+                    hx-get="/partials/fixes"
+                    hx-target="#fixes-table-body"
+                    hx-include="closest form"
+                    hx-vals='{"sort": "expires", "order": "{% if sort == 'expires' and order == 'asc' %}desc{% else %}asc{% endif %}"}'
+                    style="cursor: pointer;">
+                    Expires {% if sort == 'expires' %}{{ '↓' if order == 'desc' else '↑' }}{% endif %}
+                </th>
+            </tr>
+        </thead>
+        <tbody id="fixes-table-body">
+            {% include "partials/fixes_table.html" %}
+        </tbody>
+    </table>
+</div>
+
+{% if total > per_page %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?page={{ page - 1 }}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}&sort={{ sort }}&order={{ order }}"
+       class="btn btn-secondary btn-sm">Previous</a>
+    {% endif %}
+    <span class="text-muted">Page {{ page }} of {{ ((total - 1) // per_page + 1) }} ({{ total }} total)</span>
+    {% if page * per_page < total %}
+    <a href="?page={{ page + 1 }}{% if project_filter %}&project={{ project_filter }}{% endif %}{% if severity_filter %}&severity={{ severity_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}&sort={{ sort }}&order={{ order }}"
+       class="btn btn-secondary btn-sm">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

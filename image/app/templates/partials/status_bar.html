@@ -1,0 +1,7 @@
+{% for s in platform_status %}
+<div class="status-indicator" title="{{ s.detail }}">
+    <span class="status-dot status-dot-{{ s.status }}"></span>
+    <span class="status-name">{{ s.name }}</span>
+    <span class="status-label">{{ s.label }}</span>
+</div>
+{% endfor %}
