@@ -1,0 +1,27 @@
+---
+# Minimal values for `helm lint -f helm/linter_values.yaml`
+# Provides non-empty values where the chart requires them.
+
+image:
+  tag: "latest"
+
+database:
+  host: "postgres.example.com"
+  port: "5432"
+  name: "harbor_exempt"
+
+harbor:
+  url: "https://harbor.example.com"
+  username: "robot$harbor-exempt"
+
+secrets:
+  dbUsername: "harbor_exempt"
+  dbPassword: "placeholder"  # pragma: allowlist secret
+  harborPassword: "placeholder"  # pragma: allowlist secret
+
+serviceMonitor:
+  enabled: false
+
+migration:
+  seed:
+    enabled: false
