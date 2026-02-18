@@ -69,6 +69,24 @@ pytest
 | `tests/test_osv.py` | OSV.dev response parsing |
 | `tests/test_config.py` | Settings properties and validation |
 
+## CI
+
+| Workflow | Trigger | Jobs |
+|----------|---------|------|
+| **CI** | Every push and PR | Unit Tests (pytest), Helm Lint, Lint & Type Check (ruff + mypy) |
+| **Release** | Version tags (`v*`) | Build and push to `ghcr.io`, Trivy scan (CRITICAL/HIGH), upload SARIF to GitHub Security tab |
+| **Dependabot auto-merge** | Dependabot PRs | Auto-approve and squash-merge once all CI checks pass |
+
+Dependabot (`.github/dependabot.yml`) opens weekly update PRs for pip packages (`/image`) and GitHub Actions.
+
+## Contributing
+
+All changes to `main` require a pull request. Direct pushes are blocked.
+
+- Three CI checks must pass: Unit Tests, Helm Lint, Lint & Type Check
+- One approval required — Dependabot PRs are auto-approved and merged
+- `main` is protected against force-push and deletion
+
 ## Docker Compose
 
 Run the full stack locally without Kubernetes:
