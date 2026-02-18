@@ -1,5 +1,7 @@
 # Harbor Exempt
 
+[![CI](https://github.com/listellm/harbor-exempt/actions/workflows/ci.yml/badge.svg)](https://github.com/listellm/harbor-exempt/actions/workflows/ci.yml)
+
 Vulnerability management service for Harbor container registry — manage CVE risk acceptances with expiry, cascade logic, and automatic allowlist synchronisation.
 
 ## Overview
@@ -46,6 +48,26 @@ docker build -t harbor-exempt:dev image/
 # Lint the Helm chart
 helm lint helm/ -f helm/linter_values.yaml
 ```
+
+## Testing
+
+Unit tests cover pure functions (no DB, no network). Dependencies are isolated in `requirements-dev.txt`.
+
+```bash
+cd image
+pip install -r requirements-dev.txt
+pytest
+```
+
+73 tests across five modules:
+
+| Test file | Covers |
+|-----------|--------|
+| `tests/test_harbor.py` | Timestamp parsing, image reference parsing, URL encoding |
+| `tests/test_main.py` | Template filter functions (datetime formatting, RAG colouring) |
+| `tests/test_webhook.py` | Harbor vulnerability field mapping |
+| `tests/test_osv.py` | OSV.dev response parsing |
+| `tests/test_config.py` | Settings properties and validation |
 
 ## Docker Compose
 
@@ -194,6 +216,7 @@ Core tables: `projects` → `scans` → `vulnerabilities` → `acceptances`
 - **Liquibase** — database migration management
 - **Prometheus** — metrics via `prometheus_client`
 - **Helm** — Kubernetes deployment
+- **pytest + freezegun** — unit testing
 
 ## Security Scan
 

@@ -5,9 +5,9 @@ import time
 
 from fastapi import APIRouter
 
-from app.db import acquire, upsert_project, create_scan, upsert_vulnerability, mark_fixed
+from app.db import acquire, create_scan, mark_fixed, upsert_project, upsert_vulnerability
 from app.harbor import extract_repository
-from app.metrics import SCANS_TOTAL, SCAN_PROCESSING_DURATION, VULNS_INGESTED_TOTAL
+from app.metrics import SCAN_PROCESSING_DURATION, SCANS_TOTAL, VULNS_INGESTED_TOTAL
 from app.models import ScanRequest, ScanResponse
 
 logger = logging.getLogger(__name__)

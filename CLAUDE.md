@@ -97,3 +97,23 @@ All settings are `HARBOR_EXEMPT_`-prefixed env vars. Key ones:
 ## Authentication
 
 Harbor Exempt runs without authentication — all endpoints are unauthenticated. Deploy behind a network boundary or reverse proxy if access control is required.
+
+## Testing
+
+```bash
+cd image
+pip install -r requirements-dev.txt --break-system-packages  # system Python, no venv
+pytest
+```
+
+- Tests are pure unit tests (no DB, no network) — run from `image/`
+- `get_settings` uses `lru_cache` — `conftest.py` clears it via autouse fixture; don't construct `Settings` via `get_settings()` in tests, use `Settings(...)` directly
+
+## Pre-commit Hooks
+
+- **yapf** reformats Python automatically on first commit attempt — re-stage modified files and commit again
+- **helmlint** runs `helm lint` on every commit — requires `helm` in PATH
+
+## Pull Requests
+
+This is a GitHub repo (`github.com/listellm/harbor-exempt`) — use `gh` CLI for PRs, not ADO MCP.

@@ -8,8 +8,7 @@ URL encoding, multi-arch images, and report structure.
 import logging
 import time
 from contextlib import contextmanager
-from datetime import datetime, timezone
-from urllib.parse import quote
+from datetime import datetime
 
 import httpx
 
@@ -491,7 +490,7 @@ class HarborClient:
         """
         with self._timed("get_threshold"):
             response = await self._client.get(
-                f"/api/v2.0/projects",
+                "/api/v2.0/projects",
                 params={
                     "name": project_name,
                     "page": 1,

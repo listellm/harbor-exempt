@@ -12,10 +12,9 @@ from app.db import (
     bulk_accept,
     cascade_accept_in_project,
     cascade_revoke_in_project,
-    get_open_siblings,
-    create_acceptance,
     get_cve_instances,
     get_last_scan_timestamp,
+    get_open_siblings,
     get_summary,
     get_vulnerability,
     list_acceptances_for_vulnerability,
@@ -26,11 +25,14 @@ from app.db import (
     list_images_with_open_vulns,
     list_projects,
     list_vulnerabilities,
-    revoke_acceptance,
 )
-from app.metrics import HARBOR_DRIFT_CVES, HARBOR_SYNC_LAST_SUCCESS
 from app.main import templates
-from app.metrics import ACCEPTANCES_CREATED_TOTAL, ACCEPTANCES_REVOKED_TOTAL
+from app.metrics import (
+    ACCEPTANCES_CREATED_TOTAL,
+    ACCEPTANCES_REVOKED_TOTAL,
+    HARBOR_DRIFT_CVES,
+    HARBOR_SYNC_LAST_SUCCESS,
+)
 from app.scheduler import request_sync
 
 logger = logging.getLogger(__name__)

@@ -40,3 +40,23 @@ repos:
       - id: markdown-link-check
         args: [-q]
       - id: yapf
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^image/
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        files: ^image/app/
+        pass_filenames: false
+        args: [image/app/, --config-file, image/pyproject.toml]
+        additional_dependencies:
+          - pydantic==2.11.1
+          - pydantic-settings==2.8.1
+          - fastapi==0.128.7
+          - httpx==0.28.1

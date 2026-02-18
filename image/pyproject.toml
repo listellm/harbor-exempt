@@ -2,3 +2,27 @@
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+# E = pycodestyle errors (excl. E501 line-length — SQL strings in db.py are intentionally long)
+# F = pyflakes (undefined names, unused imports)
+# I = isort (import ordering)
+# UP deferred: too many pre-existing pyupgrade violations; address in a follow-up
+select = ["E", "F", "I"]
+extend-ignore = [
+    "E402",  # module-level import not at top — routes imported after app init in main.py
+    "E501",  # line too long — SQL strings in db.py are intentionally long
+]
+
+[tool.mypy]
+python_version = "3.13"
+ignore_missing_imports = true
+
+# Pre-existing type debt — suppress until resolved incrementally
+[[tool.mypy.overrides]]
+module = ["app.main", "app.scheduler", "app.routes.ui"]
+ignore_errors = true

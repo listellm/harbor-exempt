@@ -177,12 +177,12 @@ STATIC_DIR = Path(__file__).parent / "static"
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Mount route routers
-from app.routes.scans import router as scans_router
-from app.routes.vulnerabilities import router as vulns_router
-from app.routes.sync import router as sync_router
 from app.routes.maintenance import router as maintenance_router
+from app.routes.scans import router as scans_router
 from app.routes.summary import router as summary_router
+from app.routes.sync import router as sync_router
 from app.routes.ui import router as ui_router
+from app.routes.vulnerabilities import router as vulns_router
 from app.webhook import router as webhook_router
 
 app.include_router(scans_router)

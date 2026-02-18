@@ -2,8 +2,6 @@
 
 from datetime import datetime, timezone
 
-import pytest
-
 from app.harbor import (
     _encode_repository,
     _parse_harbor_timestamp,

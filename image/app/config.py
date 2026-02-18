@@ -116,6 +116,14 @@ class Settings(BaseSettings):
         if not self.db_host:
             warnings.append("HARBOR_EXEMPT_DB_HOST not set - database operations will fail")
 
+        # Warn when scheduler is enabled but Harbor credentials are missing
+        harbor_configured = self.harbor_url and self.harbor_username and self.harbor_password
+        if self.scheduler_enabled and not harbor_configured:
+            warnings.append(
+                "HARBOR_EXEMPT_SCHEDULER_ENABLED=true but Harbor credentials are incomplete "
+                "— allowlist sync will be disabled"
+            )
+
         # Validate log level
         valid_levels = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
         if self.log_level.upper() not in valid_levels:
