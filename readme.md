@@ -18,16 +18,30 @@ Harbor's built-in vulnerability scanning can block image pulls when CVEs exceed 
 - **Prometheus metrics** — counters, gauges, and histograms for observability.
 - **Liquibase migrations** — schema managed via Liquibase init container.
 
+## Container Image
+
+Published to GitHub Container Registry on every release:
+
+```
+ghcr.io/listellm/harbor-exempt
+```
+
+Available tags: `latest`, `v1`, `v1.0`, `v1.0.0` (semver).
+
+```bash
+docker pull ghcr.io/listellm/harbor-exempt:latest
+```
+
 ## Quick Start
 
 ```bash
-# Build the container image
-docker build -t harbor-exempt:dev image/
-
 # Run locally (requires Python 3.13+)
 cd image
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
+
+# Build the image locally
+docker build -t harbor-exempt:dev image/
 
 # Lint the Helm chart
 helm lint helm/ -f helm/linter_values.yaml
@@ -41,7 +55,14 @@ Run the full stack locally without Kubernetes:
 docker compose up
 ```
 
-This starts PostgreSQL, runs Liquibase migrations, and launches the application on `http://localhost:8000`. No Harbor instance is required — the scheduler is disabled and the app runs without Harbor credentials.
+This builds the image from `image/`, starts PostgreSQL, runs Liquibase migrations, and launches the application on `http://localhost:8000`. No Harbor instance is required — the scheduler is disabled and the app runs without Harbor credentials.
+
+To use the published image instead of building locally, replace the `build` directive in `docker-compose.yaml`:
+
+```yaml
+harbor-exempt:
+  image: ghcr.io/listellm/harbor-exempt:latest
+```
 
 To tear down and remove the database volume:
 
@@ -76,8 +97,13 @@ All settings use the `HARBOR_EXEMPT_` environment variable prefix.
 
 ## Helm Deployment
 
+### Production
+
 ```bash
 helm install harbor-exempt helm/ \
+  --set image.registry=ghcr.io \
+  --set image.repository=listellm/harbor-exempt \
+  --set image.tag=v1.0.0 \
   --set database.host=db.example.com \
   --set database.sslmode=require \
   --set secrets.dbUsername=harbor_exempt \
@@ -88,10 +114,15 @@ helm install harbor-exempt helm/ \
 
 Sensitive values are stored in a Kubernetes Secret created by the chart. You can populate them via `--set`, a values file, or manage the Secret externally (e.g. Sealed Secrets, External Secrets Operator, or your preferred secrets tooling).
 
-For local development, enable the in-cluster PostgreSQL StatefulSet:
+### Local Development
+
+Enable the in-cluster PostgreSQL StatefulSet:
 
 ```bash
 helm install harbor-exempt helm/ \
+  --set image.registry=ghcr.io \
+  --set image.repository=listellm/harbor-exempt \
+  --set image.tag=latest \
   --set database.postgresql.enabled=true \
   --set secrets.dbUsername=harbor_exempt \
   --set secrets.dbPassword=harbor-exempt-local-password \
@@ -166,7 +197,7 @@ Core tables: `projects` → `scans` → `vulnerabilities` → `acceptances`
 
 ## Security Scan
 
-Trivy scan of `harbor-exempt-harbor-exempt:latest` — 18 February 2026, base image `python:3.13.7-slim` (Debian 13.3).
+Trivy scan of `ghcr.io/listellm/harbor-exempt:latest` — 18 February 2026, base image `python:3.13.7-slim` (Debian 13.3).
 
 **0 critical, 2 high, 0 Python dependency vulnerabilities.**
 
@@ -179,7 +210,7 @@ The glibc finding (integer overflow in `memalign`) has no upstream Debian fix ye
 
 ```bash
 # Reproduce
-trivy image --severity HIGH,CRITICAL harbor-exempt-harbor-exempt:latest
+trivy image --severity HIGH,CRITICAL ghcr.io/listellm/harbor-exempt:latest
 ```
 
 ## Licence
