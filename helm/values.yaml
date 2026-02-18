@@ -2,7 +2,7 @@
 # Container Image
 image:
   registry: "ghcr.io"
-  repository: harbor-exempt/harbor-exempt
+  repository: listellm/harbor-exempt
   tag: ""
   pullPolicy: IfNotPresent
 
