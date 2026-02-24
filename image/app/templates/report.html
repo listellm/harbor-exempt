@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Acceptance Report{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Acceptance Report</h1>
+    <p>Distinct CVEs accepted within a date range, with justifications</p>
+</div>
+
+<div class="filter-bar">
+    <form class="form-inline"
+          hx-get="/partials/report"
+          hx-target="#report-table-body"
+          hx-swap="innerHTML"
+          hx-include="[name='from_date'],[name='to_date']">
+        <div class="form-group">
+            <label for="from_date">From</label>
+            <input type="text" name="from_date" id="from_date" class="form-control flatpickr-date"
+                   value="{{ from_date }}" placeholder="Start date" style="width: 150px;">
+        </div>
+        <div class="form-group">
+            <label for="to_date">To</label>
+            <input type="text" name="to_date" id="to_date" class="form-control flatpickr-date"
+                   value="{{ to_date }}" placeholder="End date" style="width: 150px;">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            Generate Report
+            <span class="htmx-indicator spinner"></span>
+        </button>
+    </form>
+</div>
+
+<div class="card">
+    {% if has_results %}
+    <div class="report-summary mb-2">
+        <span class="text-muted">
+            {% if rows %}
+            {{ rows|length }} distinct CVE{% if rows|length != 1 %}s{% endif %} accepted
+            {% if from_date %}from {{ from_date }}{% endif %}
+            {% if to_date %}to {{ to_date }}{% endif %}
+            {% else %}
+            No results
+            {% endif %}
+        </span>
+    </div>
+    {% endif %}
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>CVE ID</th>
+                    <th>Severity</th>
+                    <th>Project(s)</th>
+                    <th>Justification</th>
+                    <th>Accepted By</th>
+                    <th>First Accepted</th>
+                    <th>Expires</th>
+                </tr>
+            </thead>
+            <tbody id="report-table-body">
+                {% if has_results %}
+                    {% include "partials/report_table.html" %}
+                {% else %}
+                <tr>
+                    <td colspan="7" class="empty-state" style="padding: 3rem;">
+                        <h3>Select a date range to generate a report</h3>
+                        <p>Use the date pickers above to choose a start and end date.</p>
+                    </td>
+                </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+    .multi-project-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        background-color: rgba(37, 99, 235, 0.15);
+        color: var(--accent);
+        border: 1px solid var(--accent);
+        cursor: default;
+        margin-bottom: 0.25rem;
+    }
+
+    .project-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.25rem;
+        margin-top: 0.25rem;
+    }
+
+    .project-tag {
+        display: inline-block;
+        padding: 0.1rem 0.4rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        background-color: var(--bg-card);
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+
+    .justification-text {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .justification-list {
+        margin: 0;
+        padding-left: 1.25rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .justification-list li + li {
+        margin-top: 0.25rem;
+    }
+
+    .report-summary {
+        font-size: 0.875rem;
+        padding: 0.25rem 0;
+    }
+</style>
+<script>
+    flatpickr('.flatpickr-date', {
+        dateFormat: 'Y-m-d',
+        theme: 'dark'
+    });
+</script>
+{% endblock %}

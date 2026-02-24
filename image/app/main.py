@@ -72,6 +72,29 @@ def expiry_age_class(value: datetime | None) -> str:
     return "scan-age-green"
 
 
+def parse_report_date(date_str: str | None, end_of_day: bool = False) -> datetime | None:
+    """Parse a YYYY-MM-DD date string to a timezone-aware UTC datetime.
+
+    Args:
+        date_str:    Date in ``YYYY-MM-DD`` format, or ``None``/empty string.
+        end_of_day:  When *True* the time component is set to 23:59:59 so the
+                     date is treated as the inclusive upper bound of a range.
+
+    Returns:
+        A timezone-aware :class:`~datetime.datetime` in UTC, or ``None`` when
+        *date_str* is absent or cannot be parsed.
+    """
+    if not date_str:
+        return None
+    try:
+        dt = datetime.strptime(date_str, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        if end_of_day:
+            dt = dt.replace(hour=23, minute=59, second=59)
+        return dt
+    except ValueError:
+        return None
+
+
 templates.env.filters["format_datetime"] = format_datetime
 templates.env.filters["scan_age_class"] = scan_age_class
 templates.env.filters["expiry_age_class"] = expiry_age_class
