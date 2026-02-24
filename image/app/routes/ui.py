@@ -12,6 +12,7 @@ from app.db import (
     bulk_accept,
     cascade_accept_in_project,
     cascade_revoke_in_project,
+    get_accepted_cves_report,
     get_cve_instances,
     get_last_scan_timestamp,
     get_open_siblings,
@@ -26,7 +27,7 @@ from app.db import (
     list_projects,
     list_vulnerabilities,
 )
-from app.main import templates
+from app.main import parse_report_date, templates
 from app.metrics import (
     ACCEPTANCES_CREATED_TOTAL,
     ACCEPTANCES_REVOKED_TOTAL,
@@ -1534,6 +1535,55 @@ async def partial_audit(
 
 
 # --- Helpers ---
+
+
+@router.get("/report", response_class=HTMLResponse)
+async def report_page(
+    request: Request,
+    from_date: str | None = Query(default=None),
+    to_date: str | None = Query(default=None),
+) -> HTMLResponse:
+    """Accepted-CVE report — distinct CVEs accepted within a date range."""
+    parsed_from = parse_report_date(from_date)
+    parsed_to = parse_report_date(to_date, end_of_day=True)
+
+    rows: list[dict] = []
+    if from_date or to_date:
+        rows = await get_accepted_cves_report(
+            from_date=parsed_from,
+            to_date=parsed_to,
+        )
+
+    ctx = _base_context(request, "report")
+    ctx.update(
+        {
+            "rows": rows,
+            "from_date": from_date or "",
+            "to_date": to_date or "",
+            "has_results": from_date is not None or to_date is not None,
+        }
+    )
+    return templates.TemplateResponse("report.html", ctx)
+
+
+@router.get("/partials/report", response_class=HTMLResponse)
+async def partial_report_table(
+    request: Request,
+    from_date: str | None = Query(default=None),
+    to_date: str | None = Query(default=None),
+) -> HTMLResponse:
+    """Partial — report table rows for htmx refresh."""
+    parsed_from = parse_report_date(from_date)
+    parsed_to = parse_report_date(to_date, end_of_day=True)
+
+    rows = await get_accepted_cves_report(
+        from_date=parsed_from,
+        to_date=parsed_to,
+    )
+
+    ctx = _base_context(request)
+    ctx.update({"rows": rows})
+    return templates.TemplateResponse("partials/report_table.html", ctx)
 
 
 def _parse_date(date_str: str | None, end_of_day: bool = False) -> datetime | None:

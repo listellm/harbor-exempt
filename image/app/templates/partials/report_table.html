@@ -1,0 +1,52 @@
+{% if rows %}
+{% for row in rows %}
+<tr>
+    <td class="mono">
+        <a href="/cves/{{ row.cve_id }}">{{ row.cve_id }}</a>
+    </td>
+    <td>
+        <span class="severity-badge severity-{{ row.severity|lower }}">{{ row.severity }}</span>
+    </td>
+    <td>
+        {% if row.project_count > 1 %}
+        <span class="multi-project-badge" title="{{ row.projects|join(', ') }}">
+            {{ row.project_count }} projects
+        </span>
+        <div class="project-list">
+            {% for p in row.projects %}
+            <span class="project-tag">{{ p }}</span>
+            {% endfor %}
+        </div>
+        {% else %}
+        <span>{{ row.projects[0] }}</span>
+        {% endif %}
+    </td>
+    <td>
+        {% if row.justifications|length == 1 %}
+        <span class="justification-text">{{ row.justifications[0] }}</span>
+        {% else %}
+        <ul class="justification-list">
+            {% for j in row.justifications %}
+            <li>{{ j }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </td>
+    <td>
+        {% for u in row.accepted_by %}
+        <span class="mono">{{ u }}</span>{% if not loop.last %}, {% endif %}
+        {% endfor %}
+    </td>
+    <td class="text-secondary">{{ row.first_accepted_at|format_datetime }}</td>
+    <td class="text-secondary {{ row.max_expires_at|expiry_age_class }}">
+        {{ row.max_expires_at|format_datetime }}
+    </td>
+</tr>
+{% endfor %}
+{% else %}
+<tr>
+    <td colspan="7" class="empty-state" style="padding: 2rem;">
+        No accepted CVEs found for the selected date range.
+    </td>
+</tr>
+{% endif %}

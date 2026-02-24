@@ -2231,6 +2231,85 @@ async def list_app_repositories(project_name: str) -> list[str]:
         return [row["repository"] for row in rows]
 
 
+async def get_accepted_cves_report(
+    from_date: datetime | None = None,
+    to_date: datetime | None = None,
+) -> list[dict]:
+    """Return a distinct-CVE acceptance report for the given date range.
+
+    Each row represents one distinct CVE ID.  When a CVE has been accepted
+    across more than one project the ``project_count`` will be > 1 and
+    ``projects`` will list every project name.
+
+    Rows are ordered by severity (critical → high → medium → low → unknown)
+    then alphabetically by CVE ID.
+
+    Args:
+        from_date: Include only acceptances created on or after this date.
+        to_date:   Include only acceptances created on or before this date.
+
+    Returns:
+        List of dicts with keys:
+            cve_id, severity, project_count, projects, justifications,
+            accepted_by, first_accepted_at, max_expires_at
+    """
+    pool = get_pool()
+
+    conditions: list[str] = []
+    params: list = []
+    param_idx = 1
+
+    if from_date:
+        conditions.append(f"a.created_at >= ${param_idx}")
+        params.append(from_date)
+        param_idx += 1
+
+    if to_date:
+        conditions.append(f"a.created_at <= ${param_idx}")
+        params.append(to_date)
+        param_idx += 1
+
+    excluded = _excluded_projects()
+    if excluded:
+        conditions.append(f"p.name != ALL(${param_idx})")
+        params.append(list(excluded))
+        param_idx += 1
+
+    where_clause = (" AND ".join(conditions)) if conditions else "true"
+
+    severity_order = (
+        "CASE v.severity"
+        " WHEN 'CRITICAL' THEN 1"
+        " WHEN 'HIGH' THEN 2"
+        " WHEN 'MEDIUM' THEN 3"
+        " WHEN 'LOW' THEN 4"
+        " ELSE 5 END"
+    )
+
+    query = f"""
+        SELECT
+            v.cve_id,
+            v.severity,
+            COUNT(DISTINCT p.name)                      AS project_count,
+            array_agg(DISTINCT p.name ORDER BY p.name)  AS projects,
+            array_agg(DISTINCT a.justification)          AS justifications,
+            array_agg(DISTINCT a.accepted_by)            AS accepted_by,
+            MIN(a.created_at)                            AS first_accepted_at,
+            MAX(a.expires_at)                            AS max_expires_at
+        FROM acceptances a
+        JOIN vulnerabilities v ON v.id = a.vulnerability_id
+        JOIN projects p        ON p.id = v.project_id
+        WHERE {where_clause}
+        GROUP BY v.cve_id, v.severity
+        ORDER BY {severity_order}, v.cve_id
+    """
+
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(query, *params)
+
+    return [dict(row) for row in rows]
+
+
 async def delete_vulnerabilities_for_repository(repository: str) -> int:
     """Delete all vulnerabilities for a given repository.
 
